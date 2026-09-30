@@ -1,94 +1,62 @@
-# brace-expansion
+# call-bind-apply-helpers <sup>[![Version Badge][npm-version-svg]][package-url]</sup>
 
-[Brace expansion](https://www.gnu.org/software/bash/manual/html_node/Brace-Expansion.html),
-as known from sh/bash, in JavaScript.
+[![github actions][actions-image]][actions-url]
+[![coverage][codecov-image]][codecov-url]
+[![dependency status][deps-svg]][deps-url]
+[![dev dependency status][dev-deps-svg]][dev-deps-url]
+[![License][license-image]][license-url]
+[![Downloads][downloads-image]][downloads-url]
 
-[![CI](https://github.com/juliangruber/brace-expansion/actions/workflows/ci.yml/badge.svg)](https://github.com/juliangruber/brace-expansion/actions/workflows/ci.yml)
-[![downloads](https://img.shields.io/npm/dm/brace-expansion.svg)](https://www.npmjs.org/package/brace-expansion)
+[![npm badge][npm-badge-png]][package-url]
 
-## Example
+Helper functions around Function call/apply/bind, for use in `call-bind`.
 
-```js
-import { expand } from 'brace-expansion'
+The only packages that should likely ever use this package directly are `call-bind` and `get-intrinsic`.
+Please use `call-bind` unless you have a very good reason not to.
 
-expand('file-{a,b,c}.jpg')
-// => ['file-a.jpg', 'file-b.jpg', 'file-c.jpg']
+## Getting started
 
-expand('-v{,,}')
-// => ['-v', '-v', '-v']
-
-expand('file{0..2}.jpg')
-// => ['file0.jpg', 'file1.jpg', 'file2.jpg']
-
-expand('file-{a..c}.jpg')
-// => ['file-a.jpg', 'file-b.jpg', 'file-c.jpg']
-
-expand('file{2..0}.jpg')
-// => ['file2.jpg', 'file1.jpg', 'file0.jpg']
-
-expand('file{0..4..2}.jpg')
-// => ['file0.jpg', 'file2.jpg', 'file4.jpg']
-
-expand('file-{a..e..2}.jpg')
-// => ['file-a.jpg', 'file-c.jpg', 'file-e.jpg']
-
-expand('file{00..10..5}.jpg')
-// => ['file00.jpg', 'file05.jpg', 'file10.jpg']
-
-expand('{{A..C},{a..c}}')
-// => ['A', 'B', 'C', 'a', 'b', 'c']
-
-expand('ppp{,config,oe{,conf}}')
-// => ['ppp', 'pppconfig', 'pppoe', 'pppoeconf']
+```sh
+npm install --save call-bind-apply-helpers
 ```
 
-## API
+## Usage/Examples
 
 ```js
-import { expand } from 'brace-expansion'
+const assert = require('assert');
+const callBindBasic = require('call-bind-apply-helpers');
+
+function f(a, b) {
+	assert.equal(this, 1);
+	assert.equal(a, 2);
+	assert.equal(b, 3);
+	assert.equal(arguments.length, 2);
+}
+
+const fBound = callBindBasic([f, 1]);
+
+delete Function.prototype.call;
+delete Function.prototype.bind;
+
+fBound(2, 3);
 ```
 
-### const expanded = expand(str, [options])
+## Tests
 
-Return an array of all possible and valid expansions of `str`. If
-none are found, `[str]` is returned.
+Clone the repo, `npm install`, and run `npm test`
 
-The `options` object can provide a `max` value to cap the number
-of expansions allowed. This is limited to `100_000` by default,
-to prevent DoS attacks.
-
-```js
-const expansions = expand('{1..100}'.repeat(5), {
-  max: 100,
-})
-// expansions.length will be 100, not 100^5
-```
-
-Valid expansions are:
-
-```js
-;/^(.*,)+(.+)?$/
-// {a,b,...}
-```
-
-A comma separated list of options, like `{a,b}` or `{a,{b,c}}` or `{,a,}`.
-
-```js
-;/^-?\d+\.\.-?\d+(\.\.-?\d+)?$/
-// {x..y[..incr]}
-```
-
-A numeric sequence from `x` to `y` inclusive, with optional increment.
-If `x` or `y` start with a leading `0`, all the numbers will be padded
-to have equal length. Negative numbers and backwards iteration work too.
-
-```js
-;/^-?\d+\.\.-?\d+(\.\.-?\d+)?$/
-// {x..y[..incr]}
-```
-
-An alphabetic sequence from `x` to `y` inclusive, with optional increment.
-`x` and `y` must be exactly one character, and if given, `incr` must be a
-number.
-
-For compatibility reasons, the string `${` is not eligible for brace expansion.
+[package-url]: https://npmjs.org/package/call-bind-apply-helpers
+[npm-version-svg]: https://versionbadg.es/ljharb/call-bind-apply-helpers.svg
+[deps-svg]: https://david-dm.org/ljharb/call-bind-apply-helpers.svg
+[deps-url]: https://david-dm.org/ljharb/call-bind-apply-helpers
+[dev-deps-svg]: https://david-dm.org/ljharb/call-bind-apply-helpers/dev-status.svg
+[dev-deps-url]: https://david-dm.org/ljharb/call-bind-apply-helpers#info=devDependencies
+[npm-badge-png]: https://nodei.co/npm/call-bind-apply-helpers.png?downloads=true&stars=true
+[license-image]: https://img.shields.io/npm/l/call-bind-apply-helpers.svg
+[license-url]: LICENSE
+[downloads-image]: https://img.shields.io/npm/dm/call-bind-apply-helpers.svg
+[downloads-url]: https://npm-stat.com/charts.html?package=call-bind-apply-helpers
+[codecov-image]: https://codecov.io/gh/ljharb/call-bind-apply-helpers/branch/main/graphs/badge.svg
+[codecov-url]: https://app.codecov.io/gh/ljharb/call-bind-apply-helpers/
+[actions-image]: https://img.shields.io/endpoint?url=https://github-actions-badge-u3jn4tfpocch.runkit.sh/ljharb/call-bind-apply-helpers
+[actions-url]: https://github.com/ljharb/call-bind-apply-helpers/actions
