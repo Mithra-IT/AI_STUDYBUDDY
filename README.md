@@ -1,140 +1,94 @@
-# accepts
+# brace-expansion
 
-[![NPM Version][npm-version-image]][npm-url]
-[![NPM Downloads][npm-downloads-image]][npm-url]
-[![Node.js Version][node-version-image]][node-version-url]
-[![Build Status][github-actions-ci-image]][github-actions-ci-url]
-[![Test Coverage][coveralls-image]][coveralls-url]
+[Brace expansion](https://www.gnu.org/software/bash/manual/html_node/Brace-Expansion.html),
+as known from sh/bash, in JavaScript.
 
-Higher level content negotiation based on [negotiator](https://www.npmjs.com/package/negotiator).
-Extracted from [koa](https://www.npmjs.com/package/koa) for general use.
+[![CI](https://github.com/juliangruber/brace-expansion/actions/workflows/ci.yml/badge.svg)](https://github.com/juliangruber/brace-expansion/actions/workflows/ci.yml)
+[![downloads](https://img.shields.io/npm/dm/brace-expansion.svg)](https://www.npmjs.org/package/brace-expansion)
 
-In addition to negotiator, it allows:
+## Example
 
-- Allows types as an array or arguments list, ie `(['text/html', 'application/json'])`
-  as well as `('text/html', 'application/json')`.
-- Allows type shorthands such as `json`.
-- Returns `false` when no types match
-- Treats non-existent headers as `*`
+```js
+import { expand } from 'brace-expansion'
 
-## Installation
+expand('file-{a,b,c}.jpg')
+// => ['file-a.jpg', 'file-b.jpg', 'file-c.jpg']
 
-This is a [Node.js](https://nodejs.org/en/) module available through the
-[npm registry](https://www.npmjs.com/). Installation is done using the
-[`npm install` command](https://docs.npmjs.com/getting-started/installing-npm-packages-locally):
+expand('-v{,,}')
+// => ['-v', '-v', '-v']
 
-```sh
-$ npm install accepts
+expand('file{0..2}.jpg')
+// => ['file0.jpg', 'file1.jpg', 'file2.jpg']
+
+expand('file-{a..c}.jpg')
+// => ['file-a.jpg', 'file-b.jpg', 'file-c.jpg']
+
+expand('file{2..0}.jpg')
+// => ['file2.jpg', 'file1.jpg', 'file0.jpg']
+
+expand('file{0..4..2}.jpg')
+// => ['file0.jpg', 'file2.jpg', 'file4.jpg']
+
+expand('file-{a..e..2}.jpg')
+// => ['file-a.jpg', 'file-c.jpg', 'file-e.jpg']
+
+expand('file{00..10..5}.jpg')
+// => ['file00.jpg', 'file05.jpg', 'file10.jpg']
+
+expand('{{A..C},{a..c}}')
+// => ['A', 'B', 'C', 'a', 'b', 'c']
+
+expand('ppp{,config,oe{,conf}}')
+// => ['ppp', 'pppconfig', 'pppoe', 'pppoeconf']
 ```
 
 ## API
 
 ```js
-var accepts = require('accepts')
+import { expand } from 'brace-expansion'
 ```
 
-### accepts(req)
+### const expanded = expand(str, [options])
 
-Create a new `Accepts` object for the given `req`.
+Return an array of all possible and valid expansions of `str`. If
+none are found, `[str]` is returned.
 
-#### .charset(charsets)
-
-Return the first accepted charset. If nothing in `charsets` is accepted,
-then `false` is returned.
-
-#### .charsets()
-
-Return the charsets that the request accepts, in the order of the client's
-preference (most preferred first).
-
-#### .encoding(encodings)
-
-Return the first accepted encoding. If nothing in `encodings` is accepted,
-then `false` is returned.
-
-#### .encodings()
-
-Return the encodings that the request accepts, in the order of the client's
-preference (most preferred first).
-
-#### .language(languages)
-
-Return the first accepted language. If nothing in `languages` is accepted,
-then `false` is returned.
-
-#### .languages()
-
-Return the languages that the request accepts, in the order of the client's
-preference (most preferred first).
-
-#### .type(types)
-
-Return the first accepted type (and it is returned as the same text as what
-appears in the `types` array). If nothing in `types` is accepted, then `false`
-is returned.
-
-The `types` array can contain full MIME types or file extensions. Any value
-that is not a full MIME types is passed to `require('mime-types').lookup`.
-
-#### .types()
-
-Return the types that the request accepts, in the order of the client's
-preference (most preferred first).
-
-## Examples
-
-### Simple type negotiation
-
-This simple example shows how to use `accepts` to return a different typed
-respond body based on what the client wants to accept. The server lists it's
-preferences in order and will get back the best match between the client and
-server.
+The `options` object can provide a `max` value to cap the number
+of expansions allowed. This is limited to `100_000` by default,
+to prevent DoS attacks.
 
 ```js
-var accepts = require('accepts')
-var http = require('http')
-
-function app (req, res) {
-  var accept = accepts(req)
-
-  // the order of this list is significant; should be server preferred order
-  switch (accept.type(['json', 'html'])) {
-    case 'json':
-      res.setHeader('Content-Type', 'application/json')
-      res.write('{"hello":"world!"}')
-      break
-    case 'html':
-      res.setHeader('Content-Type', 'text/html')
-      res.write('<b>hello, world!</b>')
-      break
-    default:
-      // the fallback is text/plain, so no need to specify it above
-      res.setHeader('Content-Type', 'text/plain')
-      res.write('hello, world!')
-      break
-  }
-
-  res.end()
-}
-
-http.createServer(app).listen(3000)
+const expansions = expand('{1..100}'.repeat(5), {
+  max: 100,
+})
+// expansions.length will be 100, not 100^5
 ```
 
-You can test this out with the cURL program:
-```sh
-curl -I -H'Accept: text/html' http://localhost:3000/
+Valid expansions are:
+
+```js
+;/^(.*,)+(.+)?$/
+// {a,b,...}
 ```
 
-## License
+A comma separated list of options, like `{a,b}` or `{a,{b,c}}` or `{,a,}`.
 
-[MIT](LICENSE)
+```js
+;/^-?\d+\.\.-?\d+(\.\.-?\d+)?$/
+// {x..y[..incr]}
+```
 
-[coveralls-image]: https://badgen.net/coveralls/c/github/jshttp/accepts/master
-[coveralls-url]: https://coveralls.io/r/jshttp/accepts?branch=master
-[github-actions-ci-image]: https://badgen.net/github/checks/jshttp/accepts/master?label=ci
-[github-actions-ci-url]: https://github.com/jshttp/accepts/actions/workflows/ci.yml
-[node-version-image]: https://badgen.net/npm/node/accepts
-[node-version-url]: https://nodejs.org/en/download
-[npm-downloads-image]: https://badgen.net/npm/dm/accepts
-[npm-url]: https://npmjs.org/package/accepts
-[npm-version-image]: https://badgen.net/npm/v/accepts
+A numeric sequence from `x` to `y` inclusive, with optional increment.
+If `x` or `y` start with a leading `0`, all the numbers will be padded
+to have equal length. Negative numbers and backwards iteration work too.
+
+```js
+;/^-?\d+\.\.-?\d+(\.\.-?\d+)?$/
+// {x..y[..incr]}
+```
+
+An alphabetic sequence from `x` to `y` inclusive, with optional increment.
+`x` and `y` must be exactly one character, and if given, `incr` must be a
+number.
+
+For compatibility reasons, the string `${` is not eligible for brace expansion.
