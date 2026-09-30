@@ -1,112 +1,20 @@
-# AI StudyBuddy API
+# [Deprecated] Google AI JavaScript SDK for the Gemini API
 
-An AI-powered educational backend built with **Node.js, Express, MongoDB, and Gemini 2.5 Flash**.
+With Gemini 2.0, we took the chance to create a single unified SDK for all developers who want to use Google's GenAI models (Gemini, Veo, Imagen, etc). As part of that process, we took all of the feedback from this SDK and what developers like about other SDKs in the ecosystem to create the [Google Gen AI SDK](https://github.com/googleapis/js-genai). 
 
-## Features
-- JWT auth stored in **HTTP-only cookies** (access + refresh tokens)
-- Role-Based Access Control (student / admin)
-- Upload study materials (.txt, .md, .pdf)
-- AI-powered: summarize, flashcards, quiz, study plan via Gemini 2.5 Flash
+The full migration guide from the old SDK to new SDK is available in the [Gemini API docs](https://ai.google.dev/gemini-api/docs/migrate).
 
----
+The Gemini API docs are fully updated to show examples of the new Google Gen AI SDK. We know how disruptive an SDK change can be and don't take this change lightly, but our goal is to create an extremely simple and clear path for developers to build with our models so it felt necessary to make this change.
 
-## Setup
+Thank you for building with Gemini and [let us know](https://discuss.ai.google.dev/c/gemini-api/4) if you need any help!
 
-### 1. Install dependencies
-```bash
-npm install
-```
+**Please be advised that this repository is now considered legacy.** For the latest features, performance improvements, and active development, we strongly recommend migrating to the official **[Google Generative AI SDK for JavaScript](https://github.com/googleapis/js-genai)**.
 
-### 2. Create `.env` file
-```env
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/ai-studybuddy
-JWT_ACCESS_SECRET=your_access_secret_here
-JWT_REFRESH_SECRET=your_refresh_secret_here
-GEMINI_API_KEY=your_gemini_api_key_here
-NODE_ENV=development
-```
+**Support Plan for this Repository:**
 
-### 3. Run the server
-```bash
-node index.js
-```
+*   **Limited Maintenance:** Development is now restricted to **critical bug fixes only**. No new features will be added.
+*   **Purpose:** This limited support aims to provide stability for users while they transition to the new SDK.
+*   **End-of-Life Date:** All support for this repository (including bug fixes) will permanently end on **August 31st, 2025**.
 
----
+We encourage all users to begin planning their migration to the [Google Generative AI SDK](https://github.com/googleapis/js-genai) to ensure continued access to the latest capabilities and support.
 
-## Project Structure
-```
-ai-studybuddy/
-├── index.js                     # Entry point
-├── uploads/                     # Temp file storage
-└── src/
-    ├── controllers/
-    │   ├── authController.js    # register, login, refresh, logout
-    │   ├── materialController.js# upload + all AI features
-    │   └── adminController.js   # admin-only routes
-    ├── middleware/
-    │   ├── auth.js              # protect + adminOnly
-    │   └── upload.js            # multer config
-    ├── models/
-    │   ├── User.js
-    │   └── Material.js
-    ├── routes/
-    │   ├── auth.js
-    │   ├── materials.js
-    │   └── admin.js
-    └── utils/
-        ├── db.js                # MongoDB connection
-        ├── gemini.js            # Gemini AI helper
-        └── tokens.js            # JWT + cookie helpers
-```
-
----
-
-## API Reference
-
-### Auth Routes — `/api/auth`
-
-| Method | Endpoint    | Body                              | Description          |
-|--------|-------------|-----------------------------------|----------------------|
-| POST   | /register   | `name, email, password, role`     | Register new user    |
-| POST   | /login      | `email, password`                 | Login                |
-| POST   | /refresh    | —                                 | Refresh tokens       |
-| POST   | /logout     | —                                 | Clear cookies        |
-
-> Tokens are stored in **HTTP-only cookies** (`accessToken` expires in 15m, `refreshToken` in 7d)
-
----
-
-### Material Routes — `/api/materials` *(requires login)*
-
-| Method | Endpoint              | Body / Notes                          | Description              |
-|--------|-----------------------|---------------------------------------|--------------------------|
-| POST   | /upload               | Form-data: `file` + optional `title`  | Upload study material    |
-| GET    | /                     | —                                     | List your materials      |
-| GET    | /:id                  | —                                     | Get one material         |
-| DELETE | /:id                  | —                                     | Delete material          |
-| POST   | /:id/summarize        | —                                     | AI summarize             |
-| POST   | /:id/flashcards       | `{ count: 5 }`                        | Generate flashcards      |
-| POST   | /:id/quiz             | `{ count: 5 }`                        | Generate MCQ quiz        |
-| POST   | /:id/study-plan       | `{ goal, hoursPerDay, days }`         | Personalized study plan  |
-
----
-
-### Admin Routes — `/api/admin` *(admin role only)*
-
-| Method | Endpoint      | Description                        |
-|--------|---------------|------------------------------------|
-| GET    | /users        | List all users                     |
-| DELETE | /users/:id    | Delete user + their materials      |
-| GET    | /stats        | Total users & materials count      |
-
----
-
-## Cookie Details
-
-| Cookie         | Expiry   | Flags                        |
-|----------------|----------|------------------------------|
-| `accessToken`  | 15 min   | httpOnly, sameSite=strict    |
-| `refreshToken` | 7 days   | httpOnly, sameSite=strict    |
-
-In production, both cookies have `secure: true`.
